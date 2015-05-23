@@ -1,0 +1,21 @@
+{
+  "credentials": {
+    "zotero": {
+        "user": "",
+        "key": ""
+      }    
+  },
+  "zotero": {
+    "collections": []
+  },
+  "gmail": {
+    "client": "",
+    "secret": "",
+    "redirect": ""
+  },
+  "languages": {
+    "whitelist": ["english", "german"],
+    "confidence": 0.5,
+    "excludeOnLowConfidence": false
+  }
+}
