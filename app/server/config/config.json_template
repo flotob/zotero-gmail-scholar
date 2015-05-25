@@ -11,7 +11,7 @@
   "gmail": {
     "client": "",
     "secret": "",
-    "redirect": ""
+    "redirect": "http://localhost:3000/"
   },
   "languages": {
     "whitelist": ["english", "german"],

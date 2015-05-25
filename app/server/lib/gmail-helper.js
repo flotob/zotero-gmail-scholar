@@ -7,6 +7,8 @@ var LanguageDetect = require('languagedetect');
 var cheerio = require('cheerio');
 var jf = require('jsonfile');
 var config = jf.readFileSync('config/config.json');
+var http = require('http');
+var urlParser = require('url');
 
 var google = require('googleapis');
 var OAuth2 = google.auth.OAuth2;
@@ -35,13 +37,24 @@ function createToken() {
     });
 
     console.log('Visit the url: ', url);
-    open(url); // open browser window if possible
+    open(url); // open browser window if possible (not working with vagrant :/)
+
+    // start http server for oauth redirect
+    var server = http.createServer(function (req, res) {
+      var query = urlParser.parse(req.url, true).query;
+
+      res.writeHead(200, {'Content-Type': 'text/plain'});
+      res.end('Copy & Paste into Terminal Session: ' + query['code']);
+    }).listen(3000);   
+
+    // command line interaction
     rl.question('Enter the code here:', function(code) {
       oauth2Client.getToken(code, function(err, token) {
         oauth2Client.setCredentials(token);
         jf.writeFileSync('config/token.json', token);
         resolve(token);
         rl.close(); // stop interactive mode
+        server.close(); // stop http server
       });
     });
   });
