@@ -46,17 +46,25 @@ function createToken() {
       var query = urlParser.parse(req.url, true).query;
 
       res.writeHead(200, {'Content-Type': 'text/html'});
-      res.end('Copy & Paste into Terminal Session: <input value="' + escape(query['code']) + '" style="width: 80%">');
+      res.end(query['code']
+        ? 'Copy & Paste into Terminal Session: <input value="' + escape(query['code']) + '" style="width: 80%">'
+        : 'Visit this link: <a href="' + url + '">' + url + '</a>'
+      );
     }).listen(3000);   
 
     // command line interaction
     rl.question('Enter the code here:', function(code) {
       oauth2Client.getToken(code, function(err, token) {
+        // set credentials and save token for reuse
         oauth2Client.setCredentials(token);
         jf.writeFileSync('config/token.json', token);
-        resolve(token);
+        
+        // clean up
         rl.close(); // stop interactive mode
         server.close(); // stop http server
+
+        // resolve promise
+        resolve(token);
       });
     });
   });
@@ -80,7 +88,7 @@ function updateLastSync () {
   var now = new Date();
 
   jf.writeFileSync('config/config.json', _.extend(config, { 
-    lastSync: [now.getFullYear(), now.getMonth(), now.getDay()].join('-')
+    lastSync: [now.getFullYear(), now.getMonth() +1, now.getDay()].join('-')
   }));
 }
 
@@ -98,45 +106,47 @@ function getItems(keywords) {
               'subject:'+keyword,
             ];
 
-        if(config.lastSync) query.push('after:' + config.lastSync);
+        if (config.lastSync) query.push('after:' + config.lastSync);
 
         var msg = gmail.messages(query.join(' AND '), {max: 100});
+        var count = gmail.estimatedMessages(query.join(' AND '), {max: 100}, function () {
+          eventEmitter.emit('count/' +keyword, items);
+        });
 
-          msg
-            .on('data', function (d) {
-              var body = base64.decode(d.payload.body.data.replace(/-/g, '+').replace(/_/g, '/')), // google-specific (cf. SO)
-                $ = cheerio.load(body),
-                items = _($('h3>a'))
-                  // put in right format
-                  .map(function (e) {
-                    return {
-                      title: $(e).text(),
-                      url: e.attribs.href
-                    };
-                  })
-                  // remove unwanted foreign languages
-                  .reduce(function (result, item) {
-                    var lngDetector = new LanguageDetect(),
-                        lng = lngDetector.detect(item.title, 1),
-                        c = config.languages;
+        msg.on('data', function (d) {
+          var body = base64.decode(d.payload.body.data.replace(/-/g, '+').replace(/_/g, '/')), // google-specific (cf. SO)
+            $ = cheerio.load(body),
+            items = _($('h3>a'))
+              // put in right format
+              .map(function (e) {
+                return {
+                  title: $(e).text(),
+                  url: e.attribs.href
+                };
+              })
+              // remove unwanted foreign languages
+              .reduce(function (result, item) {
+                var lngDetector = new LanguageDetect(),
+                    lng = lngDetector.detect(item.title, 1),
+                    c = config.languages;
 
-                    if (_.indexOf(lng[0], c.whitelist) || (!c.excludeOnLowConfidence && confidence < c.confidence)) {
-                      result.push(item);
-                      return result;
-                    }
-                    else return result;
-                  }, []);
+                if (_.indexOf(lng[0], c.whitelist) || (!c.excludeOnLowConfidence && confidence < c.confidence)) {
+                  result.push(item);
+                  return result;
+                }
+                else return result;
+              }, []);
 
-              // emit batches
-              eventEmitter.emit('items', items, keyword);
+          // emit batches
+          eventEmitter.emit('items', items, keyword);
 
-              // emit single items
-              _.each(items, function (item) {
-                eventEmitter.emit('item', item, keyword);                
-              });
+          // emit single items
+          _.each(items, function (item) {
+            eventEmitter.emit('item', item, keyword);                
+          });
 
-              updateLastSync();
-            });
+          updateLastSync();
+        });
       });
     });  
 

@@ -1,16 +1,15 @@
 {
-  "credentials": {
-    "zotero": {
-        "user": "",
-        "key": ""
-      }    
-  },
   "lastSync": null,
   "zotero": {
+    "credentials": {
+      "user": "",
+      "key": ""
+    },      
     "collections": {
       "exampleKeyword1": ["QXF4QX3Q"],
       "exampleKeyword2": ["S49HD2CE"]      
-    }
+    },
+    "throttle": 2000
   },  
   "gmail": {
     "client": "",

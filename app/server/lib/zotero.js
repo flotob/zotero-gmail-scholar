@@ -1,5 +1,6 @@
 // libs
 var _ = require('lodash');
+var fs = require('fs');
 var jf = require('jsonfile');
 var crypto = require('crypto');
 
@@ -12,14 +13,13 @@ var LanguageDetect = require('languagedetect');
 
 // config
 var config = jf.readFileSync('config/config.json');
-var credentials = config.credentials;
 
 // zotero objects
 var client = new zotero.Client;
 var lib = new zotero.Library({
-      user: credentials.zotero.user,
-      key: credentials.zotero.key
-    });
+    user: config.zotero.credentials.user,
+    key: config.zotero.credentials.key
+  });
 // var stream = new zotero.Stream({ apiKey: key });
 
 // templates
@@ -85,7 +85,7 @@ function createFiles (items) {
       return false;
     }
 
-    client.post('/users/' + credentials.zotero.user + '/items', {key: credentials.zotero.key}, items)
+    client.post('/users/' + config.zotero.credentials.user + '/items', {key: config.zotero.credentials.key}, items)
       .then(function (resp) {
         var data = resp.data,
             itemKey;
@@ -107,32 +107,18 @@ function saveItems(items, collections) {
   return fn(toItems(items, collections));
 }
 
-/*
-* Play around
-// */
-// var file = {
-//   // filename: 'doc.pdf',
-//   url: 'http://example.com/doc.pdf',
-//   title: 'My Document'
-// }
+function upload (file) {
+  // users//items/collectionKey/QXF4QX3Q/P6KDUTE6
 
-// createFiles(_.extend(templates.journalArticle, file))
-// // client.get('/itemTypeFields', {itemType: 'journalArticle'})
-//   .then(function (itemKey) {
-//     console.log('success', itemKey);
-//   })
-//   .catch(function (err) {
-//     console.log('error', err);
-//   })
-
-// var form = new FormData()
-// form.append('my_field', 'my value');
-// form.append('my_buffer', new Buffer(10));
-// form.append('my_file', file);
-// form.submit('http://api.zotero.org/user/', function(err, res) {
-//   // res – response object (http.IncomingMessage)  //
-//   res.resume(); // for node-0.10.x
-// });
+  // var form = new FormData()
+  // form.append('my_field', 'my value');
+  // form.append('my_buffer', new Buffer(10));
+  // form.append('my_file', file);
+  // form.submit('http://api.zotero.org/user/', function(err, res) {
+  //   // res – response object (http.IncomingMessage)  //
+  //   res.resume(); // for node-0.10.x
+  // });
+}
 
 // helpers
 function checksum (stream) {
@@ -158,6 +144,7 @@ function checksum (stream) {
 
 
 // module API
-exports = module.exports = {
+module.exports = {
   saveItems: saveItems
+  upload: upload
 };
