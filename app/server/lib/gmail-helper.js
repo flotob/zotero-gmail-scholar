@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var sanitize = require('sanitize-filename');
+var escape = require('escape-html');
 var events = require('events');
 var open = require('open');
 var base64 = require('js-base64').Base64;
@@ -44,8 +45,8 @@ function createToken() {
     var server = http.createServer(function (req, res) {
       var query = urlParser.parse(req.url, true).query;
 
-      res.writeHead(200, {'Content-Type': 'text/plain'});
-      res.end('Copy & Paste into Terminal Session: ' + query['code']);
+      res.writeHead(200, {'Content-Type': 'text/html'});
+      res.end('Copy & Paste into Terminal Session: <input value="' + escape(query['code']) + '" style="width: 80%">');
     }).listen(3000);   
 
     // command line interaction
@@ -75,7 +76,7 @@ function filename(string, extension) {
   return sanitize(string).replace(/ /g,"_").substring(0,65).toLowerCase() + '.' + extension;
 }
 
-function getArticles(keywords) {
+function getItems(keywords) {
   var eventEmitter = new events.EventEmitter;
 
   getToken()
@@ -131,5 +132,5 @@ function getArticles(keywords) {
 
 // module API
 exports = module.exports = {
-  getArticles: getArticles
+  getItems: getItems
 }

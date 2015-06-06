@@ -6,8 +6,11 @@
       }    
   },
   "zotero": {
-    "collections": []
-  },
+    "collections": {
+      "exampleKeyword1": ["QXF4QX3Q"],
+      "exampleKeyword2": ["S49HD2CE"]      
+    }
+  },  
   "gmail": {
     "client": "",
     "secret": "",

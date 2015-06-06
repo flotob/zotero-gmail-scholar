@@ -13,7 +13,6 @@ var LanguageDetect = require('languagedetect');
 // config
 var config = jf.readFileSync('config/config.json');
 var credentials = config.credentials;
-var collections = config.zotero.collections; // collection for incoming files
 
 // zotero objects
 var client = new zotero.Client;
@@ -27,17 +26,14 @@ var lib = new zotero.Library({
 var templates = {
   attachment: {
         itemType: 'attachment',
-        collections: collections,
 
         // parentItem: 'ABCD2345'"',
-        collections: collections,
         linkMode: 'imported_url',
         // contentType: 'application/pdf',
         tags: []
       },
       journalArticle: {
         itemType: 'journalArticle',
-        collections: collections,
 
         abstractNote: '',
         publicationTitle: '',
@@ -64,37 +60,15 @@ var templates = {
       }  
 };
 
-// helpers
-var checksum = function (stream) {
-  return new Promise(function (resolve, reject) {
-    var hash = crypto.createHash('md5');
-
-    // error
-    stream.on('error', function () {
-      reject(hash.digest('hex'));
-    });
-
-    // update hash
-    stream.on('data', function (data) {
-        hash.update(data, 'utf8')
-    });
-
-    // return hash
-    stream.on('end', function () {
-      resolve(hash.digest('hex'));
-    });
-  });
-}
-
 // config
 client.persist = true; // make the client re-use the TCP connection to the server
 zotero.promisify(Promise.promisify.bind(Promise)); // make zotero use promises instead of callbacks
 
 /*
 */
-function toItems(articles) {
-  return _.map(articles, function (article) {
-    return _.extend({}, templates.journalArticle, article);
+function toItems(items, collections) {
+  return _.map(items, function (item) {
+    return _.extend({}, templates.journalArticle, item, { collections: collections });
   })
 }
 
@@ -111,27 +85,26 @@ function createFiles (items) {
       return false;
     }
 
-    // set header
-    _.defer(function () {
-      client.post('/users/' + credentials.zotero.user + '/items', {key: credentials.zotero.key}, items)
-        .then(function (resp) {
-          var data = resp.data,
-              itemKey;
+    client.post('/users/' + credentials.zotero.user + '/items', {key: credentials.zotero.key}, items)
+      .then(function (resp) {
+        var data = resp.data,
+            itemKey;
 
-          if(_.isEmpty(data.success))
-            reject(data);
-          else
-            resolve(data.success);
-        })
-        .catch(function (err) { 
-          reject(err);
-        })            
-    })
+        if(_.isEmpty(data.success))
+          reject(data);
+        else
+          resolve(data.success);
+      })
+      .catch(function (err) { 
+        reject(err);
+      });
   });
 }
 
-function saveArticles(articles) {
-  return createFiles( toItems(articles) );
+function saveItems(items, collections) {
+  var fn = _.throttle(createFiles, config.zotero.throttle);
+
+  return fn(toItems(items, collections));
 }
 
 /*
@@ -161,8 +134,30 @@ function saveArticles(articles) {
 //   res.resume(); // for node-0.10.x
 // });
 
+// helpers
+function checksum (stream) {
+  return new Promise(function (resolve, reject) {
+    var hash = crypto.createHash('md5');
+
+    // error
+    stream.on('error', function () {
+      reject(hash.digest('hex'));
+    });
+
+    // update hash
+    stream.on('data', function (data) {
+        hash.update(data, 'utf8')
+    });
+
+    // return hash
+    stream.on('end', function () {
+      resolve(hash.digest('hex'));
+    });
+  });
+}
+
 
 // module API
 exports = module.exports = {
-  saveArticles: saveArticles
+  saveItems: saveItems
 };
