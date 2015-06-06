@@ -9,10 +9,3 @@ gmail.getArticles(['bitcoin', 'blockchain'])
 .on('item', function (item, keyword) {
     console.log(keyword, item.title);
   });
-
-// var events = require('events');
-// var eventEmitter = new events.EventEmitter;
-// eventEmitter.on('items', function (items) {
-//   console.log(items);
-// });
-// eventEmitter.emit('items', 'hallo');
