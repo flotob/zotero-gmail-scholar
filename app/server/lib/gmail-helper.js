@@ -76,6 +76,14 @@ function filename(string, extension) {
   return sanitize(string).replace(/ /g,"_").substring(0,65).toLowerCase() + '.' + extension;
 }
 
+function updateLastSync () {
+  var now = new Date();
+
+  jf.writeFileSync('config/config.json', _.extend(config, { 
+    lastSync: [now.getFullYear(), now.getMonth(), now.getDay()].join('-')
+  }));
+}
+
 function getItems(keywords) {
   var eventEmitter = new events.EventEmitter;
 
@@ -87,9 +95,12 @@ function getItems(keywords) {
         var query = [
               'label:all',
               'from:scholaralerts-noreply@google.com',
-              'subject:'+keyword
-            ],
-            msg = gmail.messages(query.join(' AND '), {max: 100});
+              'subject:'+keyword,
+            ];
+
+        if(config.lastSync) query.push('after:' + config.lastSync);
+
+        var msg = gmail.messages(query.join(' AND '), {max: 100});
 
           msg
             .on('data', function (d) {
@@ -122,7 +133,9 @@ function getItems(keywords) {
               // emit single items
               _.each(items, function (item) {
                 eventEmitter.emit('item', item, keyword);                
-              })
+              });
+
+              updateLastSync();
             });
       });
     });  

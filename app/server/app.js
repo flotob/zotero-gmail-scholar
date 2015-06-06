@@ -9,6 +9,6 @@ var collections = config.zotero.collections; // collection for incoming files
 
 gmail.getItems(_.keys(collections))
   .on('items', function (items, keyword) {
-    // console.log(keyword, items);
-    zotero.saveItems(items, collections[keyword]);
+    console.log(keyword, items);
+    // zotero.saveItems(items, collections[keyword]);
   });
