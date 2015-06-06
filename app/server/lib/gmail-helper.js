@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var sanitize = require('sanitize-filename');
+var events = require('events');
 var open = require('open');
 var base64 = require('js-base64').Base64;
 var LanguageDetect = require('languagedetect');
@@ -75,44 +76,57 @@ function filename(string, extension) {
 }
 
 function getArticles(keywords) {
-  return new Promise(function (resolve, reject) {
-    getToken()
-      .then(function (token) {
-        var gmail = new Gmail(token.access_token);
+  var eventEmitter = new events.EventEmitter;
 
-        
+  getToken()
+    .then(function (token) {
+      var gmail = new Gmail(token.access_token);
 
-        var msg = gmail.messages('label:all and from:scholaralerts-noreply@google.com and subject: bitcoin', {max: 1});
+      _.each(keywords, function (keyword) {
+        var query = [
+              'label:all',
+              'from:scholaralerts-noreply@google.com',
+              'subject:'+keyword
+            ],
+            msg = gmail.messages(query.join(' AND '), {max: 100});
 
-        msg
-          .on('data', function (d) {
-            var body = base64.decode(d.payload.body.data.replace(/-/g, '+').replace(/_/g, '/')), // google-specific (cf. SO)
-              $ = cheerio.load(body),
-              items = _($('h3>a'))
-                // put in right format
-                .map(function (e) {
-                  return {
-                    title: $(e).text(),
-                    url: e.attribs.href
-                  };
-                })
-                // remove unwanted foreign languages
-                .reduce(function (result, item) {
-                  var lngDetector = new LanguageDetect(),
-                      lng = lngDetector.detect(item.title, 1),
-                      c = config.languages;
+          msg
+            .on('data', function (d) {
+              var body = base64.decode(d.payload.body.data.replace(/-/g, '+').replace(/_/g, '/')), // google-specific (cf. SO)
+                $ = cheerio.load(body),
+                items = _($('h3>a'))
+                  // put in right format
+                  .map(function (e) {
+                    return {
+                      title: $(e).text(),
+                      url: e.attribs.href
+                    };
+                  })
+                  // remove unwanted foreign languages
+                  .reduce(function (result, item) {
+                    var lngDetector = new LanguageDetect(),
+                        lng = lngDetector.detect(item.title, 1),
+                        c = config.languages;
 
-                  if (_.indexOf(lng[0], c.whitelist) || (!c.excludeOnLowConfidence && confidence < c.confidence)) {
-                    result.push(item);
-                    return result;
-                  }
-                  else return result;
-                }, []);
+                    if (_.indexOf(lng[0], c.whitelist) || (!c.excludeOnLowConfidence && confidence < c.confidence)) {
+                      result.push(item);
+                      return result;
+                    }
+                    else return result;
+                  }, []);
 
-            resolve(items);
-          });
-      });      
-  });
+              // emit batches
+              eventEmitter.emit('items', items, keyword);
+
+              // emit single items
+              _.each(items, function (item) {
+                eventEmitter.emit('item', item, keyword);                
+              })
+            });
+      });
+    });  
+
+  return eventEmitter;
 }
 
 // module API
