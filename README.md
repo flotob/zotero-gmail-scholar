@@ -6,7 +6,8 @@ Unfortunately, Scholar only let's you push those notifications to your email add
 ## On the Server
     vagrant up && vagrant ssh       # set up vagrant box and log in
     cd /app/server && npm install   # install npm dependencies
-    bin/www                         # start the app
+    chmod +x bin/www                # make executable
+    ./bin/www                       # start the app
 ## Google API access
 1. Go to [Google Developer Console](https://code.google.com/apis/console/?hl=de&pli=1)
 2. Go to APIs and Authentication
