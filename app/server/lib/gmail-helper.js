@@ -74,16 +74,19 @@ function filename(string, extension) {
   return sanitize(string).replace(/ /g,"_").substring(0,65).toLowerCase() + '.' + extension;
 }
 
-function getArticles() {
+function getArticles(keywords) {
   return new Promise(function (resolve, reject) {
     getToken()
       .then(function (token) {
-        var gmail = new Gmail(token.access_token)
-          , msg = gmail.messages('label:all and from:scholaralerts-noreply@google.com and subject: bitcoin', {max: 1});
+        var gmail = new Gmail(token.access_token);
+
+        
+
+        var msg = gmail.messages('label:all and from:scholaralerts-noreply@google.com and subject: bitcoin', {max: 1});
 
         msg
           .on('data', function (d) {
-            var body = base64.decode(d.payload.body.data.replace(/-/g, '+').replace(/_/g, '/')),
+            var body = base64.decode(d.payload.body.data.replace(/-/g, '+').replace(/_/g, '/')), // google-specific (cf. SO)
               $ = cheerio.load(body),
               items = _($('h3>a'))
                 // put in right format
