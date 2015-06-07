@@ -9,19 +9,20 @@ var PythonShell = require('python-shell');
 
 var pyshell = new PythonShell('zotero.py', {
   scriptPath: './lib',
-  pythonOptions: ['-u']
+  pythonOptions: ['-u'],
+  mode: 'json',
 });
 
 function send (subject, body) {
-  pyshell.send(JSON.stringify(_.extend(body, { subject:subject })));
+  pyshell.send(_.extend(body, { subject:subject }));
 }
 
 // sends a message to the Python script via stdin
 send('config', config.zotero.credentials);
 send('upload', { files:files } ); 
 
-pyshell.on('message', function (raw) {
-  resp = JSON.parse( raw.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
+pyshell.on('message', function (resp) {
+  // resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
   console.log(resp);
 });
 
