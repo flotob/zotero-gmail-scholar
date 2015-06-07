@@ -9,5 +9,11 @@ for msg in sys.stdin:
       print '{ "status": "success", "msg": "configured" }'
 
     if args['subject'] == 'upload':
-      ul = zot.attachment_simple(args['files'])
-      print '{ "status": "success", "msg": ' + json.dumps(ul) + ' }'
+      try:
+        zot.attachment_simple(args['files'])
+        print '{ "status": "success", "msg": ' + json.dumps(ul) + ' }'
+      except Exception as inst:
+          if str(inst) == "u'prefix'": # handle weird unicode bug :) (hack)
+            print '{ "status": "success", "msg": "uploaded" }'
+          else:
+            print '{ "status": "fail", "msg": "' + str(inst) + ' }'

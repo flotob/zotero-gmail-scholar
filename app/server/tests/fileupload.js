@@ -21,14 +21,14 @@ send('config', config.zotero.credentials);
 send('upload', { files:files } ); 
 
 pyshell.on('message', function (raw) {
-  resp = JSON.parse(raw);
+  resp = JSON.parse( raw.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
   console.log(resp);
 });
 
 // end the input stream and allow the process to exit
 pyshell.end(function (err) {
   if (err) throw err;
-  console.log('finished');
+  console.log('python script halted');
 });
 
 
