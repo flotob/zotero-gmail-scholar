@@ -1,50 +1,88 @@
-import sys, json
+# # # # # # # # # # # # # # # # # # # # # # # # #
+# PYZOTERO-NODEJS-BRIDGE                        #
+# --------------------------------------------- #
+# stdin serves as the comms channel with nodejs #
+# stdin can be written to via print 'statement' #
+# # # # # # # # # # # # # # # # # # # # # # # # #
+
+import sys, json, collections
 from pyzotero import zotero
 
-# shortcut for print
-def success(msg):
-  print '{ "status": "success", "msg": "' + msg + '" }'
-def fail(msg):
-  print '{ "status": "fail", "msg": "' + msg + '"" }'
+# helper for utf8 bullshit, fck python2.x
+def convert(data):
+  if isinstance(data, basestring):
+    return str(data)
+  elif isinstance(data, collections.Mapping):
+    return dict(map(convert, data.iteritems()))
+  elif isinstance(data, collections.Iterable):
+    return type(data)(map(convert, data))
+  else:
+    return data
 
-# zotero-related procedures
+# create zotero client
 def client(conf):
   return zotero.Zotero(args['user'], args['lib'], args['key'])
 
-def create(client, items):
-  return True
-
-def upload(client, files, items):
+# upload files (pdfs) as standalone or attach to zotero files
+def upload(client, files, parent):
   try:
-    if len(items) == 0:
-      ul = client.attachment_simple(files)
-    else:
-      ul = client.attachment_both(files, items)
-    return json.dumps(ul)
+    ul = client.attachment_simple(files, parent)
+    return json.dumps(convert(ul))
   except Exception as inst:
-    if str(inst) == "u'prefix'": # handle weird unicode bug :) (hack)
+    if str(inst) == "u'prefix'": # handle weird unicode bug :) (hack) // persists despite conversion of incoming stdin data
       return True
     else:
       return str(inst)
 
-# script public api listening to stdin
+# create zotero files and save to zotero library
+def create(client, items):
+  failed = []
+
+  for item in items:
+    # save attachments and clean up dataset to conform with zotero api
+    files = item['files'] if item['files'] else False
+    del item['files']
+
+    # enrich with template data corresponding to itemType
+    template = client.item_template(item['itemType'])
+    template.update(item)
+
+    # sent request and deal with reply
+    resp = client.create_items([template])
+    if resp['failed']:
+      failed.append(resp['failed'])
+    elif files and resp['success']:
+      upload(client, files, resp['success']['0'])
+    
+  return failed if failed else True
+
+# shortcuts for print (public comms channel with nodejs)
+def success(msg):
+  print '{ "status": "success", "msg": "' + msg + '" }'
+def fail(msg):
+  print '{ "status": "fail", "msg": "' + msg + '"" }'      
+
+# public api listening to stdin
 for msg in sys.stdin:
-    args = json.loads(msg)
+  args = convert(json.loads(msg))
 
-    if args['subject'] == 'config':
-      zot = client(args)
-      success('configured')
+  # set credentials etc.
+  if args['subject'] == 'config':
+    zot = client(args)
+    success('configured')
 
-    if args['subject'] == 'create':
-      resp = create(zot, args['items'])
-      if resp:
-        success('created')
-      else:
-        fail(resp)
+  # create zotero files and upload if files array is given
+  if args['subject'] == 'create':
+    resp = create(zot, args['items'])
+    if resp == True:
+      success('created')
+    else:
+      fail(resp)
 
-    if args['subject'] == 'upload':
-      resp = upload(zot, args['files'], [])
-      if resp == True:
-        success('uploaded')
-      else:
-        fail(resp)
+  # directly upload files
+  if args['subject'] == 'upload':
+    resp = upload(zot, args['files'], args['parent'] if 'parent' in args else '' )
+    if resp == True:
+      success('uploaded')
+    else:
+      fail(resp)

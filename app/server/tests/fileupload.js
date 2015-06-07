@@ -1,25 +1,28 @@
 var _ = require('lodash');
 var jf = require('jsonfile');
-
 var config = jf.readFileSync('config/config.json');
-
-var files = ['/ripple.pdf'];
-
 var PythonShell = require('python-shell');
-
 var pyshell = new PythonShell('zotero.py', {
   scriptPath: './lib',
   pythonOptions: ['-u'],
-  mode: 'json',
+  mode: 'text',
 });
 
 function send (subject, body) {
-  pyshell.send(_.extend(body, { subject:subject }));
+  pyshell.send(JSON.stringify(_.extend(body, { subject:subject })));
 }
 
 // sends a message to the Python script via stdin
 send('config', config.zotero.credentials);
-send('upload', { files:files } ); 
+// send('upload', { files:files } ); 
+send('create', {
+  items: [{
+    itemType: 'journalArticle',
+    title: 'hallo123testeinszwo',
+    url: 'http://example.org',
+    files: ['/ripple.pdf']
+  }]
+});
 
 pyshell.on('message', function (resp) {
   // resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
