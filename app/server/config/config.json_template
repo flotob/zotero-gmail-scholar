@@ -3,7 +3,8 @@
   "zotero": {
     "credentials": {
       "user": "",
-      "key": ""
+      "key": "",
+      "lib": "user"
     },      
     "collections": {
       "exampleKeyword1": ["QXF4QX3Q"],
