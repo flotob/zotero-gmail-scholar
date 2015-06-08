@@ -88,7 +88,7 @@ function updateLastSync () {
   var now = new Date();
 
   jf.writeFileSync('config/config.json', _.extend(config, { 
-    lastSync: [now.getFullYear(), now.getMonth() +1, now.getDay()].join('-')
+    lastSync: [now.getUTCFullYear(), now.getUTCMonth() +1, now.getUTCDate()].join('-')
   }));
 }
 
@@ -109,8 +109,8 @@ function getItems(keywords) {
         if (config.lastSync) query.push('after:' + config.lastSync);
 
         var msg = gmail.messages(query.join(' AND '), {max: 100});
-        var count = gmail.estimatedMessages(query.join(' AND '), {max: 100}, function () {
-          eventEmitter.emit('count/' +keyword, items);
+        gmail.estimatedMessages(query.join(' AND '), {max: 100}, function (count) {
+          eventEmitter.emit('count/' +keyword, count);
         });
 
         msg.on('data', function (d) {

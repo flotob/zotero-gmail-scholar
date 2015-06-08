@@ -13,11 +13,11 @@ req.on('items', function (items, keyword) {
   if(process.env['NODE_ENV'] === 'development') {
     console.log('DEBUG', items, keyword);
   }
-  else zotero.saveItems(items, collections[keyword])
-    .then(function (resp) {
-      console.log('success', resp);
-    })
-    .catch(function (resp) {
-      console.log('error', resp);
-    });
+  // else zotero.saveItems(items, collections[keyword])
+  //   .then(function (resp) {
+  //     console.log('success', resp);
+  //   })
+  //   .catch(function (resp) {
+  //     console.log('error', resp);
+  //   });
 });

@@ -76,7 +76,7 @@ for msg in sys.stdin:
   # create zotero files and upload if files array is given
   if args['subject'] == 'create':
     if 'zot' in locals() or 'auth' in args:
-      zot = zot if 'zot' in locals() else client(args['auth'])
+      zot = zot if 'zot' in locals() else client(args['auth']) # auth and persist if necessary
       resp = create(zot, args['items'])
       if resp == True:
         success('created')

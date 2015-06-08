@@ -19,7 +19,7 @@ send('create', {
     itemType: 'journalArticle',
     title: 'hallo123testeinszwo',
     url: 'http://example.org',
-    files: ['/ripple.pdf']
+    files: []
   }]
 });
 
