@@ -21,7 +21,7 @@ def convert(data):
 
 # create zotero client
 def client(conf):
-  return zotero.Zotero(args['user'], args['lib'], args['key'])
+  return zotero.Zotero(conf['user'], conf['lib'], conf['key'])
 
 # upload files (pdfs) as standalone or attach to zotero files
 def upload(client, files, parent):
@@ -40,8 +40,10 @@ def create(client, items):
 
   for item in items:
     # save attachments and clean up dataset to conform with zotero api
-    files = item['files'] if item['files'] else False
-    del item['files']
+    if 'files' in item:
+      if item['files']:
+        files = item['files']
+      del item['files']
 
     # enrich with template data corresponding to itemType
     template = client.item_template(item['itemType'])
@@ -51,33 +53,37 @@ def create(client, items):
     resp = client.create_items([template])
     if resp['failed']:
       failed.append(resp['failed'])
-    elif files and resp['success']:
+    elif 'files' in locals() and resp['success']:
       upload(client, files, resp['success']['0'])
     
   return failed if failed else True
 
 # shortcuts for print (public comms channel with nodejs)
 def success(msg):
-  print '{ "status": "success", "msg": "' + msg + '" }'
+  print '{ "status": "success", "msg": "' + convert(msg) + '" }'
 def fail(msg):
-  print '{ "status": "fail", "msg": "' + msg + '"" }'      
+  print '{ "status": "fail", "msg": "' + convert(msg) + '" }'      
 
 # public api listening to stdin
 for msg in sys.stdin:
   args = convert(json.loads(msg))
 
   # set credentials etc.
-  if args['subject'] == 'config':
+  if args['subject'] == 'auth':
     zot = client(args)
-    success('configured')
+    success('authenticated')
 
   # create zotero files and upload if files array is given
   if args['subject'] == 'create':
-    resp = create(zot, args['items'])
-    if resp == True:
-      success('created')
+    if 'zot' in locals() or 'auth' in args:
+      zot = zot if 'zot' in locals() else client(args['auth'])
+      resp = create(zot, args['items'])
+      if resp == True:
+        success('created')
+      else:
+        fail(resp)
     else:
-      fail(resp)
+      fail('no auth info given')
 
   # directly upload files
   if args['subject'] == 'upload':

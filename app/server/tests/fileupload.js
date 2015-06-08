@@ -12,10 +12,9 @@ function send (subject, body) {
   pyshell.send(JSON.stringify(_.extend(body, { subject:subject })));
 }
 
-// sends a message to the Python script via stdin
-send('config', config.zotero.credentials);
-// send('upload', { files:files } ); 
+send('auth', config.zotero.credentials ); 
 send('create', {
+  // auth: config.zotero.credentials,
   items: [{
     itemType: 'journalArticle',
     title: 'hallo123testeinszwo',
@@ -25,7 +24,7 @@ send('create', {
 });
 
 pyshell.on('message', function (resp) {
-  // resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
+  resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
   console.log(resp);
 });
 
@@ -34,57 +33,3 @@ pyshell.end(function (err) {
   if (err) throw err;
   console.log('python script halted');
 });
-
-
-
-
-
-
-// var io = (function () {
-//   // var pyshell = new PythonShell('zotero.py', { 
-//   //   // scriptPath: '../blubb/lib',
-//   //   // pythonOptions: ['-u']
-//   // });
-  
-//   var send = function (subject, body) {
-//     pyshell.send( JSON.stringify(_.extend(body, { subject:subject } )));
-//   };
-
-//   var listen = function (callback) {
-//     pyshell.on('message', callback);
-//   };
-
-//   return {
-//     pub: send,
-//     sub: listen,
-//     kill: pyshell.end
-//   }
-// })();
-
-// io.pub('config', { credentials: config.zotero.credentials });
-
-// io.sub(function (msg) {
-//   // received a message sent from the Python script (a simple "print" statement)
-//   if (msg == 'config') {
-//     io.kill(function (err) {
-//       if (err) throw err;
-//       console.log('finished1');
-//     });
-//   }
-// });
-
-
-// // backup kill
-// io.kill(function (err) {
-//   if (err) throw err;
-//   console.log('finished2');
-// });
-
-
-// PythonShell.run('zotero.py', {
-//   mode: 'text',
-//   args: [library_id, library_type, api_key, file]
-// }, function (err) {
-//   if (err) throw err;
-//   console.log('finished');
-// });
