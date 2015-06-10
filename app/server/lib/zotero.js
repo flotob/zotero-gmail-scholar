@@ -9,32 +9,60 @@ var PythonShell = require('python-shell');
 //   url: 'http://example.org',
 //   files: []
 
-function create (items) {
+function create (items, options) {
   items = _.isArray(items) ? items : [items];
 
-  var py = new PythonShell('zotero.py', {
-    scriptPath: './lib',
-    pythonOptions: ['-u'],
-    mode: 'text',
+  return new Promise(function (resolve, reject) {
+    var logs = {
+      success: [],
+      fail: []
+    };
+    
+    var py = new PythonShell('zotero.py', {
+      scriptPath: './lib',
+      pythonOptions: ['-u'],
+      mode: 'text',
+    });
+
+    // register listener
+    py.on('message', function (resp) {
+      resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
+      if (resp && 'status' in resp) {
+        logs[resp.status == 'success' ? 'success' : 'fail'].push(resp.msg);
+      }
+    });    
+
+    // request
+    request('create', {
+      auth: config.zotero.credentials,
+      items: items
+    });
+
+    // end the input stream and allow the process to exit
+    py.end(function (err) {
+      // reject promise if error returned
+      if (err) reject(err, logs);
+      // else continue
+      else {
+        // delete cached pdf if stated so in options
+        if (options.delCachedFile) {
+          // iterate over items array
+          _.each(items, function (item) {
+            // iterate over files array
+            'files' in item && _.each(item.files, function (file) {
+              // delete file
+              fs.unlink(file, function (err, result) {
+                // reject promise if removal failes
+                if (err) reject (logs, err);
+                // resolve promise if everything goes smooth
+                else resolve(logs, result);
+              });
+            });
+          })
+        }
+      }
+    });
   });
-
-  // register listener
-  py.on('message', function (resp) {
-    resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
-    console.log(resp);
-  });    
-
-  // request
-  request('create', {
-    auth: config.zotero.credentials,
-    items: items
-  });
-
-  // end the input stream and allow the process to exit
-  py.end(function (err) {
-    if (err) throw err;
-    console.log('python script halted');
-  });  
 }
 
 function request (subject, body) {

@@ -18,7 +18,7 @@ gmail.getItems(_.keys(collections))
 
     // set zotero template type, assume we're dealing with articles bc of google scholar
     _.extend(item, { 
-      itemType: 'journalArticle',
+      itemType: config.zotero.template,
       collections: collections[keyword],
       url: clean_url
     });    
@@ -29,12 +29,22 @@ gmail.getItems(_.keys(collections))
       download.now(pdf, file)
         .then(function (filepath) {
           _.extend(item, {files: [filepath]});
-          console.log(item);
-          // zoter.create([item], { delCachedFile: true });          
+          zotero.create([item], { delCachedFile: true })
+            .then(function (logs) {
+              console.log('success', logs);
+            })
+            .catch(function (err) {
+              console.log('error', err);
+            });
         });
     }
     else {
-      console.log(item);
-      // zoter.create([item], { delCachedFile: true });
+      zotero.create([item])
+        .then(function (logs) {
+          console.log('success', logs);
+        })
+        .catch(function (err) {
+          console.log('error', err);
+        });
     }
   });

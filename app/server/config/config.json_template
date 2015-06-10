@@ -6,6 +6,7 @@
       "key": "",
       "lib": "user"
     },      
+    "template": "journalArticle",
     "collections": {
       "exampleKeyword1": ["QXF4QX3Q"],
       "exampleKeyword2": ["S49HD2CE"]      
@@ -17,6 +18,7 @@
     "secret": "",
     "redirect": "http://localhost:3000/"
   },
+  "cache": "tmp",
   "languages": {
     "whitelist": ["english", "german"],
     "confidence": 0.5,
