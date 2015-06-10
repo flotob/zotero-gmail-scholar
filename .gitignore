@@ -13,7 +13,7 @@ build/Release
 node_modules
 bower_components
 *.sublime-workspace
-tmp/*
+tmp
 
 
 # Compiled source #

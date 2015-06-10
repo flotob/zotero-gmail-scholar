@@ -29,12 +29,13 @@ gmail.getItems(_.keys(collections))
       download.now(pdf, file)
         .then(function (filepath) {
           _.extend(item, {files: [filepath]});
+          console.log('calling create on: ', item);
           zotero.create([item], { delCachedFile: true })
             .then(function (logs) {
-              console.log('success', logs);
+              console.log('zot-create-promsie: success', logs);
             })
             .catch(function (err) {
-              console.log('error', err);
+              console.log('zot-create-promise: error', err);
             });
         });
     }
