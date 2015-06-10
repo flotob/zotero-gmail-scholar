@@ -11,7 +11,7 @@ from pyzotero import zotero
 # helper for utf8 bullshit, fck python2.x
 def convert(data):
   if isinstance(data, basestring):
-    return str(data)
+    return data.encode('utf-8')
   elif isinstance(data, collections.Mapping):
     return dict(map(convert, data.iteritems()))
   elif isinstance(data, collections.Iterable):
@@ -60,9 +60,11 @@ def create(client, items):
 
 # shortcuts for print (public comms channel with nodejs)
 def success(msg):
-  print '{ "status": "success", "msg": "' + convert(msg) + '" }'
+  #print '{ "status": "success", "msg": "' + convert(msg) + '" }'
+  return True
 def fail(msg):
-  print '{ "status": "fail", "msg": "' + convert(msg) + '" }'      
+  #print '{ "status": "fail", "msg": "' + convert(msg) + '" }'      
+  return True
 
 # public api listening to stdin
 for msg in sys.stdin:

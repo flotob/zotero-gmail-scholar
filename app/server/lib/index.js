@@ -18,7 +18,7 @@ gmail.getItems(_.keys(collections))
 
     // set zotero template type, assume we're dealing with articles bc of google scholar
     _.extend(item, { 
-      itemType: 'journalArticle',
+      itemType: config.zotero.template,
       collections: collections[keyword],
       url: clean_url
     });    
@@ -29,12 +29,34 @@ gmail.getItems(_.keys(collections))
       download.now(pdf, file)
         .then(function (filepath) {
           _.extend(item, {files: [filepath]});
-          console.log(item);
-          // zoter.create([item], { delCachedFile: true });          
+          console.log('calling create on: ', item);
+          zotero.create([item], { delCachedFile: true })
+            .then(function (logs) {
+              console.log('zot-create-promsie (withfile): success', logs);
+            })
+            .catch(function (err) {
+              console.log('zot-create-promise (withfile): error', err);
+            });
+        })
+        .catch(function (error) {
+          console.log('download error', error);
+          zotero.create([item])
+            .then(function (logs) {
+              console.log('zot-create-promsie (nofile): success', logs);
+            })
+            .catch(function (err) {
+              console.log('zot-create-promsie (nofile): success', err);
+            });          
         });
     }
     else {
-      console.log(item);
-      // zoter.create([item], { delCachedFile: true });
+      console.log('no pdfs found');
+      zotero.create([item])
+        .then(function (logs) {
+          console.log('zot-create-promsie (nofile): success', logs);
+        })
+        .catch(function (err) {
+          console.log('zot-create-promsie (nofile): success', err);
+        });
     }
   });

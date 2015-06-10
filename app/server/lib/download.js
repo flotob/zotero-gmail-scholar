@@ -31,7 +31,7 @@ var now = function(fileurl, filename) {
           file.close(function () {resolve.call(this, filepath, arguments)});  // close() is async, call cb after close completes.
         });
       }).on('error', function(err) { // Handle errors
-        fs.unlink(config.cache); // Delete the file async. (But we don't check the result)
+        fs.existsSync(filepath) && fs.unlink(filepath); // Delete the file async. (But we don't check the result)
         reject(err.message);
       });
     }
