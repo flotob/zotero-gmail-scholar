@@ -10,6 +10,8 @@ var PythonShell = require('python-shell');
 //   files: []
 
 function create (items) {
+  items = _.isArray(items) ? items : [items];
+
   var py = new PythonShell('zotero.py', {
     scriptPath: './lib',
     pythonOptions: ['-u'],
