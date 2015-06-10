@@ -32,20 +32,31 @@ gmail.getItems(_.keys(collections))
           console.log('calling create on: ', item);
           zotero.create([item], { delCachedFile: true })
             .then(function (logs) {
-              console.log('zot-create-promsie: success', logs);
+              console.log('zot-create-promsie (withfile): success', logs);
             })
             .catch(function (err) {
-              console.log('zot-create-promise: error', err);
+              console.log('zot-create-promise (withfile): error', err);
             });
+        })
+        .catch(function (error) {
+          console.log('download error', error);
+          zotero.create([item])
+            .then(function (logs) {
+              console.log('zot-create-promsie (nofile): success', logs);
+            })
+            .catch(function (err) {
+              console.log('zot-create-promsie (nofile): success', err);
+            });          
         });
     }
     else {
+      console.log('no pdfs found');
       zotero.create([item])
         .then(function (logs) {
-          console.log('success', logs);
+          console.log('zot-create-promsie (nofile): success', logs);
         })
         .catch(function (err) {
-          console.log('error', err);
+          console.log('zot-create-promsie (nofile): success', err);
         });
     }
   });
