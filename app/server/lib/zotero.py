@@ -32,7 +32,7 @@ def upload(client, files, parent):
     if str(inst) == "u'prefix'": # handle weird unicode bug :) (hack) // persists despite conversion of incoming stdin data
       return True
     else:
-      return str(inst)
+      return False
 
 # create zotero files and save to zotero library
 def create(client, item):
@@ -83,8 +83,12 @@ for msg in sys.stdin:
 
   # directly upload files
   if args['subject'] == 'upload':
-    resp = upload(zot, args['files'], args['parent'] if 'parent' in args else '' )
-    if resp == True:
-      success('uploaded')
+    if 'zot' in locals() or 'auth' in args:
+      zot = zot if 'zot' in locals() else client(args['auth']) # auth and persist if necessary    
+      resp = upload(zot, args['files'], args['parent'] if 'parent' in args else '' )
+      if resp == True:
+        success('uploaded')
+      else:
+        fail('upload failed')
     else:
-      fail(resp)
+      fail('no auth info given')

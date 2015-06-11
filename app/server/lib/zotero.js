@@ -5,15 +5,7 @@ var PythonShell = require('python-shell');
 var Promise = require('bluebird');
 var fs = require('fs');
 
-// item: {
-//   itemType: 'journalArticle',
-//   title: 'hallo123testeinszwo',
-//   url: 'http://example.org',
-//   files: []
-// }
-
 function create (item, options) {
-
   return new Promise(function (resolve, reject) {
     var pySh = new PythonShell('zotero.py', {
       scriptPath: './lib',
@@ -70,7 +62,35 @@ function create (item, options) {
       if (err) console.log(err);
     });
   });
+}
 
+function upload (file) {
+  return new Promise(function (resolve, reject) {
+    var pySh = new PythonShell('zotero.py', {
+      scriptPath: './lib',
+      pythonOptions: ['-u'],
+      mode: 'text',
+    });
+
+    // register listener
+    pySh.on('message', function (resp) {
+      resp = JSON.parse( resp.replace(/u'(?=[^:]+')/g, "'") ); // cf. http://stackoverflow.com/a/21319120/899586
+      if (resp && 'status' in resp) {
+        if (resp['status']  == 'success') 
+          resolve();
+        else
+          reject('msg' in resp && resp['msg'] ? resp['msg'] : 'something went horribly wrong');
+      }
+    });    
+
+    // request
+    request(pySh, 'upload', _.extend({ auth: config.zotero.credentials }, file));
+
+    // end the input stream and allow the process to exit
+    pySh.end(function (err) {
+      if (err) console.log(err);
+    });
+  });
 }
 
 function request (pySh, subject, body) {
@@ -78,6 +98,6 @@ function request (pySh, subject, body) {
 }
 
 module.exports = {
-  // create: _.throttle(create, 5000)
-  create: create
+  create: create,
+  upload: upload
 }
