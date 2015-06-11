@@ -1,3 +1,3 @@
 #!/bin/bash
 
-tmux new -d -s redis 'echo window-1 pane-1; redis-server' \;
+tmux new -d -s redis 'redis-server' \;
