@@ -35,36 +35,30 @@ def upload(client, files, parent):
       return str(inst)
 
 # create zotero files and save to zotero library
-def create(client, items):
-  failed = []
+def create(client, item):
+  # for item in items:
+  #   # save attachments and clean up dataset to conform with zotero api
+  #   if 'files' in item:
+  #     if item['files']:
+  #       files = item['files']
+  #     del item['files']
 
-  for item in items:
-    # save attachments and clean up dataset to conform with zotero api
-    if 'files' in item:
-      if item['files']:
-        files = item['files']
-      del item['files']
+  # enrich with template data corresponding to itemType
+  template = client.item_template(item['itemType'])
+  template.update({ x:item[x] for x in item if x in template }) # intersect item/template, to remove invalid fields
 
-    # enrich with template data corresponding to itemType
-    template = client.item_template(item['itemType'])
-    template.update(item)
-
-    # sent request and deal with reply
-    resp = client.create_items([template])
-    if resp['failed']:
-      failed.append(resp['failed'])
-    elif 'files' in locals() and resp['success']:
-      upload(client, files, resp['success']['0'])
-    
-  return failed if failed else True
+  # sent request and deal with reply
+  resp = client.create_items([template])
+  if 'failed' in resp and resp['failed']:
+    return False
+  elif 'success' in resp and resp['success']:
+    return resp['success']['0']
 
 # shortcuts for print (public comms channel with nodejs)
 def success(msg):
-  #print '{ "status": "success", "msg": "' + convert(msg) + '" }'
-  return True
+  print '{ "status": "success", "msg": "' + convert(msg) + '" }'
 def fail(msg):
-  #print '{ "status": "fail", "msg": "' + convert(msg) + '" }'      
-  return True
+  print '{ "status": "fail", "msg": "' + convert(msg) + '" }'    
 
 # public api listening to stdin
 for msg in sys.stdin:
@@ -79,11 +73,11 @@ for msg in sys.stdin:
   if args['subject'] == 'create':
     if 'zot' in locals() or 'auth' in args:
       zot = zot if 'zot' in locals() else client(args['auth']) # auth and persist if necessary
-      resp = create(zot, args['items'])
-      if resp == True:
-        success('created')
+      item_id = create(zot, args['item'])
+      if item_id:
+        success(item_id)
       else:
-        fail(resp)
+        fail('failed to create item on zotero server')
     else:
       fail('no auth info given')
 

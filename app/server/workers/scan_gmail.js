@@ -5,9 +5,9 @@ var path = require('path');
 var kue = require('kue')
   , queue = kue.createQueue();
 
-var zotero = require('./zotero');
-var gmail = require('./gmail');
-var download = require('./download');
+var zotero = require('lib/zotero');
+var gmail = require('lib/gmail');
+var download = require('lib/download');
 
 var config = jf.readFileSync('config/config.json');
 var collections = config.zotero.collections;

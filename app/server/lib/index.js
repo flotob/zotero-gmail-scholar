@@ -24,7 +24,7 @@ gmail.getItems(_.keys(collections))
       url: clean_url
     });
 
-    var job = queue.create('zotero/create', {
+    queue.create('zotero/create', {
       item: item,
       download: pdf ? true : false
     }).save( function(err){
