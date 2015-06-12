@@ -5,13 +5,17 @@ var PythonShell = require('python-shell');
 var Promise = require('bluebird');
 var fs = require('fs');
 
-function create (item, options) {
-  return new Promise(function (resolve, reject) {
-    var pySh = new PythonShell('zotero.py', {
+var PySh = function () {
+  return PythonShell('zotero.py', {
       scriptPath: './lib',
       pythonOptions: ['-u'],
       mode: 'text',
     });
+}
+
+function create (item, options) {
+  return new Promise(function (resolve, reject) {
+    var pySh = new PySh;
 
     // register listener
     pySh.on('message', function (resp) {
@@ -66,11 +70,7 @@ function create (item, options) {
 
 function upload (file) {
   return new Promise(function (resolve, reject) {
-    var pySh = new PythonShell('zotero.py', {
-      scriptPath: './lib',
-      pythonOptions: ['-u'],
-      mode: 'text',
-    });
+    var pySh = new PySh;
 
     // register listener
     pySh.on('message', function (resp) {
@@ -79,7 +79,7 @@ function upload (file) {
         if (resp['status']  == 'success') 
           resolve();
         else
-          reject('msg' in resp && resp['msg'] ? resp['msg'] : 'something went horribly wrong');
+          reject('python: ' + 'msg' in resp && resp['msg'] ? resp['msg'] : 'something went horribly wrong');
       }
     });    
 

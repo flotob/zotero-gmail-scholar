@@ -27,6 +27,7 @@
     "open": "0.0.5",
     "passport": "^0.2.2",
     "passport-google-oauth": "^0.2.0",
+    "pm2": "^0.14.0",
     "python-shell": "^0.1.0",
     "sanitize-filename": "^1.3.0",
     "simplecrawler": "^0.5.2",

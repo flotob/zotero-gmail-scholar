@@ -15,7 +15,10 @@ var root = path.dirname(require.main.filename);
 // + https added
 var now = function(fileurl, filename, cache) {
   return new Promise(function (resolve, reject) {
-    var filepath = path.join(root, '../', cache, /*crypto.createHash('md5').update(fileurl).digest('hex'),*/ filename); // to prevent filename collisions in cache dir, put each file in uuid-subdir
+    var hash = crypto.createHash('md5').update(fileurl).digest('hex');
+    var path = path.join(root, '../', cache, hash); // to prevent filename collisions in cache dir, put each file in uuid-subdir
+    var tmp = fs.mkdirSync(path);
+    var filepath = path.join(tmp, filename);
     var file = fs.createWriteStream(filepath);
     var protocols = { http: http, https: https };
     var protocol = url.parse(fileurl).protocol.slice(0,-1); // remove the ":" after e.g. http: and https:

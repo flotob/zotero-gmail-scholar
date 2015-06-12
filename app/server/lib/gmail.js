@@ -155,5 +155,6 @@ function getItems(keywords) {
 
 // module API
 exports = module.exports = {
+  getToken: getToken,
   getItems: getItems
 }
