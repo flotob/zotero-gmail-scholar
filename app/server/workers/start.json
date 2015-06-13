@@ -1,0 +1,31 @@
+{
+  "apps" : [{
+    "name": "gmail.scan",
+    "script": "workers/gmail_scan.js",
+    "watch": true,
+    "merge_logs": true,
+    "watch": true,
+    "ignore_watch": ["[\\/\\\\]\\./", "node_modules"],
+  },{
+    "name": "zotero.item.create",
+    "script": "workers/zotero_item_create.js",
+    "watch": true,
+    "merge_logs": true,
+    "watch": true,
+    "ignore_watch": ["[\\/\\\\]\\./", "node_modules"],
+  },{
+    "name": "zotero.attachment.download",
+    "script": "workers/zotero_attachment_download.js",
+    "watch": true,
+    "merge_logs": true,
+    "watch": true,
+    "ignore_watch": ["[\\/\\\\]\\./", "node_modules"],
+  },{
+    "name": "zotero.attachment.upload",
+    "script": "workers/zotero_attachment_upload.js",
+    "watch": true,
+    "merge_logs": true,
+    "watch": true,
+    "ignore_watch": ["[\\/\\\\]\\./", "node_modules"],
+  },]
+}
