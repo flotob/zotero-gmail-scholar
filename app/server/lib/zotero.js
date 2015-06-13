@@ -6,7 +6,7 @@ var Promise = require('bluebird');
 var fs = require('fs');
 
 var PySh = function () {
-  return PythonShell('zotero.py', {
+  return new PythonShell('zotero.py', {
       scriptPath: './lib',
       pythonOptions: ['-u'],
       mode: 'text',

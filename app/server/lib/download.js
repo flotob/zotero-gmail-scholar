@@ -15,10 +15,7 @@ var root = path.dirname(require.main.filename);
 // + https added
 var now = function(fileurl, filename, cache) {
   return new Promise(function (resolve, reject) {
-    var hash = crypto.createHash('md5').update(fileurl).digest('hex');
-    var path = path.join(root, '../', cache, hash); // to prevent filename collisions in cache dir, put each file in uuid-subdir
-    var tmp = fs.mkdirSync(path);
-    var filepath = path.join(tmp, filename);
+    var filepath = path.join(root, '../', cache, filename);
     var file = fs.createWriteStream(filepath);
     var protocols = { http: http, https: https };
     var protocol = url.parse(fileurl).protocol.slice(0,-1); // remove the ":" after e.g. http: and https:
@@ -51,7 +48,9 @@ var cleanURL = function (google_url) {
 
 // e.g. filename($(e).text(), 'pdf');
 function filename(string, extension) {
-  return sanitize(string).replace(/ /g,"_").substring(0,65).toLowerCase() + '.' + extension;
+  var hash = crypto.createHash('md5').update(string).digest('hex');
+  // return sanitize(string).replace(/ /g,"_").substring(0,65).toLowerCase() + '.' + extension;
+  return hash + '.' + extension;
 }
 
 module.exports = {
